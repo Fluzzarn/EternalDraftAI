@@ -1,4 +1,8 @@
-﻿using ScreenShots;
+﻿using AForge;
+using AForge.Imaging;
+using AForge.Imaging.Filters;
+using AForge.Math.Geometry;
+using ScreenShots;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 
 namespace EternalDraftAI
 {
@@ -37,7 +42,7 @@ namespace EternalDraftAI
 
 
                 ScreenCapture sc = new ScreenCapture();
-                Image im = sc.CaptureWindow(EternalHandle);
+                System.Drawing.Image im = sc.CaptureWindow(EternalHandle);
                 if (pictureBox1.Image != null)
                 {
                     var old = pictureBox1.Image;
@@ -47,8 +52,52 @@ namespace EternalDraftAI
                 
                 pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
                 pictureBox1.Image = im;
+                Bitmap bp = new Bitmap(im);
+
+
+                // set center colol and radius
+
+                if (redTextBox.Text == "")
+                
+                    redTextBox.Text = "0";
+                
+                if (greenTextBox.Text == "")
+                
+                    greenTextBox.Text = "0";
+                
+                if (blueTextBox.Text == "")
+                
+                    blueTextBox.Text = "0";
+                
+
+                int r = Convert.ToInt32(redTextBox.Text);
+                int green = Convert.ToInt32(greenTextBox.Text);
+                int b = Convert.ToInt32(blueTextBox.Text);
+
+                // create filter
+                var temp = (Bitmap)System.Drawing.Image.FromFile("card-mask.png");
+                var mask = new Bitmap(temp,new Size(bp.Width,bp.Height));
+                MaskedFilter filter = new MaskedFilter(new ColorFiltering(new IntRange(255,255), new IntRange(255, 255), new IntRange(255, 255)), mask);
+
+                filter.ApplyInPlace(bp);
+
+
+                pictureBox1.Image = bp;
+
 
             }
+        }
+
+        private PointF[] ToPointsArray(List<IntPoint> points)
+        {
+            PointF[] array = new PointF[points.Count];
+
+            for (int i = 0, n = points.Count; i < n; i++)
+            {
+                array[i] = new PointF(points[i].X, points[i].Y);
+            }
+
+            return array;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -60,6 +109,11 @@ namespace EternalDraftAI
             {
                 EternalHandle = eternalProcess.MainWindowHandle;
             }
+        }
+
+        private void redTextBox_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
